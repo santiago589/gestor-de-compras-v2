@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lista de Compras</title>
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="icon" href="icon-192.png" />
+  <meta name="theme-color" content="#008000" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root { --verde: #4caf50; --verde-oscuro: #2e7d32; --fondo: #ffffff; --sombra: 0 4px 8px rgba(0,0,0,0.1);}
+    body { font-family: 'Poppins', sans-serif; background-color: var(--fondo); text-align:center; padding:20px; margin:0; color:#000;}
+    h1 { font-size:26px; color: var(--verde-oscuro); margin-bottom:20px; }
+    input, button { padding:10px; font-size:16px; margin:5px; width:90%; max-width:300px; border-radius:10px; border:1px solid #ccc; box-shadow:var(--sombra); transition:all 0.3s ease;}
+    button { background-color: var(--verde); color:white; font-weight:bold; cursor:pointer;}
+    button:hover { background-color: var(--verde-oscuro);}
+    ul { list-style:none; padding:0; margin-top:20px; }
+    li { background:white; margin:8px auto; padding:12px; width:95%; max-width:400px; border-radius:12px; box-shadow:var(--sombra); display:flex; justify-content:space-between; align-items:center; transition: all 0.3s ease;}
+    li:hover { transform:scale(1.01); }
+    .item-info { flex:1; text-align:left; font-size:16px; cursor:pointer; }
+    .item-info.comprado { text-decoration: line-through; opacity:0.6; }
+    .borrar { background-color:red; color:white; border:none; width:24px; height:24px; font-size:14px; border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:var(--sombra); padding:0; }
+    #total { margin-top:30px; font-weight:bold; font-size:26px; color: var(--verde-oscuro); border:2px solid var(--verde-oscuro); padding:12px 20px; display:inline-block; border-radius:12px; background-color:#f1fff3; box-shadow:var(--sombra);}
+    #descargar, #ordenar, #borrarTodo { margin-top:15px; background-color:#1e7e34; color:white; border:none; padding:10px 20px; font-size:16px; border-radius:10px; box-shadow:var(--sombra); cursor:pointer; display:inline-block;}
+    #descargar:hover, #ordenar:hover, #borrarTodo:hover { background-color:#155724;}
+    .contenedor-agregar { display:flex; justify-content:center; align-items:flex-start; gap:30px; margin-bottom:20px; flex-wrap:wrap;}
+    .inputs-agregar { display:flex; flex-direction:column; align-items:center;}
+    
+    #toggleCalc { background-color:#007b00; color:white; border:none; padding:10px; margin-bottom:10px; border-radius:10px; cursor:pointer; }
+    #toggleCalc:hover { background-color:#005a00; }
+
+    #calculadora {
+      width:200px;
+      padding:10px;
+      border:2px solid var(--verde-oscuro);
+      border-radius:10px;
+      background-color:#f9fff9;
+      box-shadow:var(--sombra);
+      position:sticky;
+      top:20px;
+      display:none; /* oculto por defecto */
+    }
+    #calcDisplay { width:100%; padding:8px; font-size:18px; text-align:right; border-radius:6px; border:1px solid #ccc; margin-bottom:10px; background:#fff; box-sizing: border-box; }
+
+    .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .calc-btn {
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid var(--verde-oscuro);
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: var(--sombra);
+      color: black;
+      width: 100%;
+      box-sizing: border-box;
+      transition: transform 0.1s ease, background 0.2s ease;
+    }
+    .calc-btn:hover { background: #e9f9e9; }
+    .calc-btn:active { transform: scale(0.9); }
+    .calc-btn.op { background: var(--verde); color: white; }
+    .calc-btn.op:hover { background: var(--verde-oscuro); }
+    .calc-btn.clear { background: red; color: white; font-weight: bold; }
+    .calc-btn.op.igual { font-size: 20px; grid-column: 1 / -1; background: var(--verde); color: white; }
+
+    @keyframes popPunch {
+      0%   { transform: scale(1);   }
+      50%  { transform: scale(0.85);}
+      100% { transform: scale(1);   }
+    }
+    .pop-punch { animation: popPunch 0.15s ease; }
+  </style>
+</head>
+<body>
+  <h1>🛒 Lista de Compras</h1>
+
+  <div class="contenedor-agregar">
+    <div class="inputs-agregar">
+      <input type="text" id="itemInput" placeholder="Producto (ej: Pan)" />
+      <input type="number" id="cantidadInput" placeholder="Cantidad (ej: 2)" />
+      <input type="number" id="precioInput" placeholder="Precio unitario (ej: 1200)" />
+      <button id="agregar" onclick="agregarItem()">Agregar</button>
+      <button id="toggleCalc" onclick="toggleCalculadora()">🧮 Mostrar/Ocultar Calculadora</button>
+    </div>
+
+    <div id="calculadora">
+      <input type="text" id="calcDisplay" readonly />
+      <div class="calc-grid">
+        <button class="calc-btn" onclick="addCalc('7')">7</button>
+        <button class="calc-btn" onclick="addCalc('8')">8</button>
+        <button class="calc-btn" onclick="addCalc('9')">9</button>
+        <button class="calc-btn clear" onclick="calcClear()">C</button>      
+        <button class="calc-btn" onclick="addCalc('4')">4</button>
+        <button class="calc-btn" onclick="addCalc('5')">5</button>
+        <button class="calc-btn" onclick="addCalc('6')">6</button>
+        <button class="calc-btn op" onclick="addCalc('*')">×</button>
+        <button class="calc-btn" onclick="addCalc('1')">1</button>
+        <button class="calc-btn" onclick="addCalc('2')">2</button>
+        <button class="calc-btn" onclick="addCalc('3')">3</button>
+        <button class="calc-btn op" onclick="addCalc('-')">−</button>
+        <button class="calc-btn" onclick="addCalc('0')">0</button>
+        <button class="calc-btn" onclick="addCalc('.')">.</button>
+        <button class="calc-btn op" onclick="addCalc('+')">+</button>
+        <button class="calc-btn op" onclick="addCalc('/')">÷</button>
+        <button class="calc-btn op igual" onclick="calcResult()">=</button>
+      </div>   
+    </div>
+  </div>
+
+  <div id="total">Total: $0</div>
+  <ul id="lista"></ul>
+  <button id="descargar" onclick="descargarExcel()">📥 Descargar Excel</button>
+  <button id="ordenar" onclick="ordenarLista()">🔃 Ordenar por Precio ↑</button>
+  <button id="borrarTodo" onclick="borrarTodos()">🗑️ Borrar todo</button>
+
+  <script>
+    let total = 0;
+    let items = [];
+    let modoOrden = "precio";
+    let ascendente = true;
+
+    window.onload = function() {
+      const guardado = localStorage.getItem("listaDeCompras");
+      if(guardado){
+        items = JSON.parse(guardado);
+        items.forEach(item => mostrarItem(item));
+        total = items.reduce((acc,i)=>acc+i.precioTotal,0);
+        actualizarTotal();
+      }
+    }
+
+    function guardarLista(){ localStorage.setItem("listaDeCompras", JSON.stringify(items)); }
+
+    function agregarItem(){
+      const producto = document.getElementById("itemInput").value.trim();
+      const cantidad = parseInt(document.getElementById("cantidadInput").value.trim());
+      const precioUnitario = parseFloat(document.getElementById("precioInput").value.trim());
+      if(!producto || isNaN(cantidad) || isNaN(precioUnitario)){ alert("Completa todos los campos correctamente."); return; }
+      const precioTotal = cantidad * precioUnitario;
+      const nuevoItem = { producto, cantidad, precioUnitario, precioTotal, comprado:false };
+      items.push(nuevoItem);
+      mostrarItem(nuevoItem);
+      total += precioTotal;
+      actualizarTotal();
+      guardarLista();
+      document.getElementById("itemInput").value="";
+      document.getElementById("cantidadInput").value="";
+      document.getElementById("precioInput").value="";
+      document.getElementById("itemInput").focus();
+    }
+
+    function mostrarItem(item){
+      const li=document.createElement("li");
+      const info=document.createElement("div");
+      info.className="item-info";
+      info.innerHTML=`${item.producto} × ${item.cantidad} — <strong>$${item.precioTotal.toLocaleString('es-CL')}</strong>`;
+      if(item.comprado) info.classList.add("comprado");
+      info.onclick=()=>{ item.comprado=!item.comprado; info.classList.toggle("comprado"); guardarLista(); };
+      const btn=document.createElement("button");
+      btn.className="borrar"; btn.textContent="x"; btn.onclick=()=>{ total-=item.precioTotal; actualizarTotal(); items=items.filter(i=>i!==item); guardarLista(); li.remove(); };
+      li.appendChild(info); li.appendChild(btn);
+      document.getElementById("lista").appendChild(li);
+    }
+
+    function actualizarTotal(){ document.getElementById("total").innerText=`Total: $${total.toLocaleString('es-CL')}`; }
+
+    function descargarExcel(){
+      if(items.length===0){ alert("Lista vacía"); return; }
+      let csv="Producto;Cantidad;Precio Unitario;Precio Total\n";
+      items.forEach(i=> csv+=`${i.producto};${i.cantidad};${i.precioUnitario};${i.precioTotal}\n`);
+      csv+="\n\nTotal;;;" + total + "\n";
+      const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"} );
+      const url = URL.createObjectURL(blob);
+      const link=document.createElement("a");
+      link.href=url; link.download="lista_de_compras.csv";
+      document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    }
+
+    function ordenarLista(){
+      if(modoOrden==="precio"){
+        items.sort((a,b)=> ascendente ? a.precioTotal-b.precioTotal : b.precioTotal-a.precioTotal );
+        modoOrden="nombre";
+        document.getElementById("ordenar").innerText = "🔃 Ordenar por Nombre ↑";
+      } else {
+        items.sort((a,b)=> ascendente ? a.producto.localeCompare(b.producto) : b.producto.localeCompare(a.producto) );
+        modoOrden="precio";
+        document.getElementById("ordenar").innerText = "🔃 Ordenar por Precio ↑";
+      }
+      ascendente = !ascendente;
+      document.getElementById("lista").innerHTML="";
+      total = 0;
+      items.forEach(i=>mostrarItem(i));
+      total=items.reduce((acc,i)=>acc+i.precioTotal,0);
+      actualizarTotal();
+      guardarLista();
+    }
+
+    function borrarTodos() {
+      if (items.length === 0) { alert("No hay productos para borrar"); return; }
+      if (confirm("¿Seguro que quieres borrar TODOS los productos?")) {
+        items = [];
+        total = 0;
+        document.getElementById("lista").innerHTML = "";
+        actualizarTotal();
+        localStorage.removeItem("listaDeCompras");
+      }
+    }
+
+    document.getElementById("itemInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); document.getElementById("cantidadInput").focus(); }});
+    document.getElementById("cantidadInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); document.getElementById("precioInput").focus(); }});
+    document.getElementById("precioInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); agregarItem(); }});
+
+    function addCalc(valor){ document.getElementById("calcDisplay").value+=valor; }
+    function calcClear(){ document.getElementById("calcDisplay").value=""; }
+    function calcResult(){ try{ let exp=document.getElementById("calcDisplay").value; if(/^[0-9+\-*/.()]+$/.test(exp)) document.getElementById("calcDisplay").value=eval(exp); else alert("Solo números y operadores válidos"); }catch{ alert("Operación inválida"); } }
+
+    // POP PUNCH en cada botón
+    document.querySelectorAll('.calc-btn').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        btn.classList.add('pop-punch');
+        setTimeout(()=>btn.classList.remove('pop-punch'),150);
+      });
+    });
+
+    // Función toggle calculadora
+    function toggleCalculadora(){
+      const calc = document.getElementById("calculadora");
+      if(calc.style.display === "none" || calc.style.display === ""){
+        calc.style.display = "block";
+      } else {
+        calc.style.display = "none";
+      }
+    }
+
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(()=>console.log("✅ Service Worker registrado"))
+        .catch(err=>console.error("❌ Error Service Worker:",err));
+    }
+  </script>
+</body>
+</html>
+

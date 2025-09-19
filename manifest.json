@@ -1,0 +1,27 @@
+{
+  "name": "Lista de Compras",
+  "short_name": "Compras",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f0f0f0",
+  "theme_color": "#008000",
+  "orientation": "portrait",
+  "scope": "./",
+  "description": "Una app para gestionar tu lista de compras con calculadora integrada.",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "shopping"],
+  "lang": "es-ES"
+}
